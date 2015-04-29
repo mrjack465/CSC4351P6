@@ -3,6 +3,7 @@ import Temp.Temp;
 import Temp.TempList;
 import Temp.Label;
 import Temp.LabelList;
+
 import java.util.Hashtable;
 
 public class Codegen {
@@ -61,13 +62,19 @@ public class Codegen {
   }
 
   void munchStm(Tree.MOVE s) {
+	  emit(new Assem.MOVE("    move `d0 `s0", munchExp(s.dst), munchExp(s.src)));
   }
 
   void munchStm(Tree.UEXP s) {
     munchExp(s.exp);
   }
 
-  void munchStm(Tree.JUMP s) {
+  void munchStm(Tree.JUMP s) {	  
+	  Tree.Exp t = s.exp;
+	  if (t instanceof Tree.NAME){
+		  emit(new Assem.OPER("    b  `j0" , null, null, s.targets));
+	  }
+	  
   }
 
   private static String[] CJUMP = new String[10];
@@ -88,6 +95,7 @@ public class Codegen {
   }
 
   void munchStm(Tree.LABEL l) {
+	  emit(new Assem.LABEL(l.label.toString() + ":", l.label));
   }
 
   Temp munchExp(Tree.Exp s) {
@@ -108,7 +116,9 @@ public class Codegen {
   }
 
   Temp munchExp(Tree.CONST e) {
-    return frame.ZERO;
+	  Temp t = new Temp();
+	  emit(new Assem.OPER("    li `d0 " + e.value, L(t), null));
+	  return t;
   }
 
   Temp munchExp(Tree.NAME e) {
@@ -151,7 +161,42 @@ public class Codegen {
   }
 
   Temp munchExp(Tree.BINOP e) {
-    return frame.ZERO;
+	  Temp t = new Temp();
+	  String b = BINOP[e.binop];
+	  if (b.equals("mulo")){
+		  if (e.left instanceof Tree.CONST && ((Tree.CONST) e.left).value == 2){
+			  // left shift
+			  emit(OPER("sll `d0 `s0 " + 1, L(t), L(munchExp(e.right))));
+			  return t;
+		  }
+		  if (e.right instanceof Tree.CONST && ((Tree.CONST) e.right).value == 2){
+			  // left shift
+			  emit(OPER("sll" + " `d0 `s0 " + 1 , L(t), L(munchExp(e.left))));
+			  return t;
+		  }  
+	  }
+	  if (b.equals("div")){
+		  if (e.right instanceof Tree.CONST && ((Tree.CONST) e.right).value == 2){
+			  // left shift
+			  emit(OPER("sra `d0 `s0 " + 1, L(t), L(munchExp(e.right))));
+			  return t;
+		  }
+	  }
+	  if (b.equals("add") || b.equals("sub") || b.equals("mulo") || b.equals("div")){
+		  if (e.right instanceof Tree.CONST) {
+              emit(OPER(b+" `d0 `s0 " + ((Tree.CONST) e.right).value, L(t), L(munchExp(e.left))));
+              return t;
+		  }
+		  if (e.left instanceof Tree.CONST) {
+              emit(OPER(b+" `d0 `s0 " + ((Tree.CONST) e.left).value, L(t), L(munchExp(e.right))));
+              return t;
+		  }
+		  // Maybe ...
+		  //emit(OPER(b+" `d0,`s0,`s1 ", L(munchExp(e.left)), L(munchExp(e.right))));
+          return t;
+	  }
+	  
+	  return null;
   }
 
   Temp munchExp(Tree.MEM e) {

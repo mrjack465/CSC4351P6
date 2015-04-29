@@ -2,6 +2,21 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="/Users/jack/Git/CSC4351P6/chap9_ref"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Absyn.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Archive.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Assem.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Canon.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/ErrorMsg.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/FindEscape.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Frame.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Parse.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Semant.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Symbol.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Temp.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Translate.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Tree.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Types.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Util.zip"/>
+	<classpathentry kind="lib" path="/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/jars/Mips.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

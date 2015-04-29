@@ -50,4 +50,13 @@ JUMP(
  NAME L0)
 LABEL L0
 # Instructions: 
+L1:
+	li t34 10
+	move $a0 t34
+	move $a1 $0
+	jal _initArray
+	move t33 $v0
+	move $v0 t33
+	b L0
+L0:
 END tigermain
