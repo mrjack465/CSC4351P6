@@ -122,10 +122,14 @@ public class Codegen {
   }
 
   Temp munchExp(Tree.NAME e) {
-    return frame.ZERO;
+	System.out.println("NAME ");
+	String name = e.label.toString();
+	//emit(OPER("jal "+name.));
+    return frame.RV();
   }
 
   Temp munchExp(Tree.TEMP e) {
+	System.out.println("TEMP");
     if (e.temp == frame.FP) {
       Temp t = new Temp();
       emit(OPER("addu `d0 `s0 " + frame.name + "_framesize",
@@ -161,6 +165,7 @@ public class Codegen {
   }
 
   Temp munchExp(Tree.BINOP e) {
+	  System.out.println("BINOP");
 	  Temp t = new Temp();
 	  String b = BINOP[e.binop];
 	  if (b.equals("mulo")){
@@ -200,11 +205,16 @@ public class Codegen {
   }
 
   Temp munchExp(Tree.MEM e) {
+	System.out.println("MEM");
     return frame.ZERO;
   }
 
   Temp munchExp(Tree.CALL s) {
-    return frame.ZERO;
+	System.out.println("CALL");
+	if(s.func instanceof Tree.NAME){
+		emit(OPER("jal "+((Tree.NAME)s.func).label.toString(), frame.calldefs, munchArgs(0, s.args)));
+	}
+    return frame.RV();
   }
 
   private TempList munchArgs(int i, Tree.ExpList args) {

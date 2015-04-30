@@ -1,42 +1,49 @@
 PROCEDURE tigermain
 # Before canonicalization: 
 MOVE(
- TEMP $v0,
- BINOP(MUL,
-  CONST 2,
-  CONST 5))
+ TEMP t33,
+ CALL(
+  NAME _initArray,
+   CONST 3,
+   CONST 0))
 # After canonicalization: 
 MOVE(
- TEMP $v0,
- BINOP(MUL,
-  CONST 2,
-  CONST 5))
+ TEMP t33,
+ CALL(
+  NAME _initArray,
+   CONST 3,
+   CONST 0))
 # Basic Blocks: 
 #
-LABEL L3
+LABEL L1
 MOVE(
- TEMP $v0,
- BINOP(MUL,
-  CONST 2,
-  CONST 5))
+ TEMP t33,
+ CALL(
+  NAME _initArray,
+   CONST 3,
+   CONST 0))
 JUMP(
- NAME L2)
-LABEL L2
+ NAME L0)
+LABEL L0
 # Trace Scheduled: 
-LABEL L3
+LABEL L1
 MOVE(
- TEMP $v0,
- BINOP(MUL,
-  CONST 2,
-  CONST 5))
+ TEMP t33,
+ CALL(
+  NAME _initArray,
+   CONST 3,
+   CONST 0))
 JUMP(
- NAME L2)
-LABEL L2
+ NAME L0)
+LABEL L0
 # Instructions: 
-L3:
-    li t36 5
-	sll t35 t36 1
-    move $v0 t35
-    b  L2
-L2:
+L1:
+    li t34 3
+	move $a0 t34
+    li t35 0
+	move $a1 t35
+		jal _initArray
+    move t33 $v0
+    b  L0
+L0:
 END tigermain

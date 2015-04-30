@@ -2,35 +2,41 @@ PROCEDURE tigermain
 # Before canonicalization: 
 MOVE(
  TEMP $v0,
- BINOP(PLUS,
-  CONST 1,
-  CONST 1))
+ BINOP(MUL,
+  CONST 2,
+  CONST 5))
 # After canonicalization: 
 MOVE(
  TEMP $v0,
- BINOP(PLUS,
-  CONST 1,
-  CONST 1))
+ BINOP(MUL,
+  CONST 2,
+  CONST 5))
 # Basic Blocks: 
 #
-LABEL L3
+LABEL L1
 MOVE(
  TEMP $v0,
- BINOP(PLUS,
-  CONST 1,
-  CONST 1))
+ BINOP(MUL,
+  CONST 2,
+  CONST 5))
 JUMP(
- NAME L2)
-LABEL L2
+ NAME L0)
+LABEL L0
 # Trace Scheduled: 
-LABEL L3
+LABEL L1
 MOVE(
  TEMP $v0,
- BINOP(PLUS,
-  CONST 1,
-  CONST 1))
+ BINOP(MUL,
+  CONST 2,
+  CONST 5))
 JUMP(
- NAME L2)
-LABEL L2
+ NAME L0)
+LABEL L0
 # Instructions: 
+L1:
+    li t34 5
+	sll t33 t34 1
+    move $v0 t33
+    b  L0
+L0:
 END tigermain

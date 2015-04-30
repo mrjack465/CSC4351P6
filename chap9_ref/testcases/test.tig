@@ -1,1 +1,7 @@
-2 * 5
+let
+
+	type arrtype = array of int
+	var arr := arrtype [3] of 0
+
+in
+end

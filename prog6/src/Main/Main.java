@@ -56,7 +56,7 @@ class Main {
 
 	public static void main(String args[]) throws java.io.IOException {
 		for (int i = 0; i < args.length; ++i) {
-			String src = "/Users/Chester/Google Drive/LSU/Compiler/CSC4351P6/prog6/src/testcases/test.tig";
+			String src = "/Users/jack/Git/CSC4351P6/prog6/src/testcases/test.tig";
 			if (src.endsWith(".tig")) {
 				if (args.length > 1)
 					System.out.println("***Compiling: " + src);
