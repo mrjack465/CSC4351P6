@@ -1,1 +1,7 @@
-1 + 1
+let 
+	var x := 4
+	var y := 8
+	var z := 9 + y
+in 
+
+end
