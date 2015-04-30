@@ -1,11 +1,45 @@
 PROCEDURE tigermain
 # Before canonicalization: 
 MOVE(
- TEMP t33,
- CALL(
-  NAME _initArray,
-   CONST 3,
-   CONST 0))
+ TEMP $v0,
+ ESEQ(
+  MOVE(
+   TEMP t33,
+   CALL(
+    NAME _initArray,
+     CONST 3,
+     CONST 0)),
+  ESEQ(
+   SEQ(
+    MOVE(
+     TEMP t34,
+     TEMP t33),
+    SEQ(
+     MOVE(
+      TEMP t35,
+      CONST 0),
+     SEQ(
+      CJUMP(LT,
+       TEMP t35,
+       CONST 0,
+       _BADSUB,L0),
+      SEQ(
+       LABEL L0,
+       SEQ(
+        CJUMP(GT,
+         TEMP t35,
+         MEM(
+          BINOP(PLUS,
+           TEMP t34,
+           CONST -4)),
+         _BADSUB,L1),
+        LABEL L1))))),
+   MEM(
+    BINOP(PLUS,
+     TEMP t34,
+     BINOP(MUL,
+      TEMP t35,
+      CONST 4))))))
 # After canonicalization: 
 MOVE(
  TEMP t33,
@@ -13,37 +47,132 @@ MOVE(
   NAME _initArray,
    CONST 3,
    CONST 0))
+MOVE(
+ TEMP t34,
+ TEMP t33)
+MOVE(
+ TEMP t35,
+ CONST 0)
+CJUMP(LT,
+ TEMP t35,
+ CONST 0,
+ _BADSUB,L0)
+LABEL L0
+CJUMP(GT,
+ TEMP t35,
+ MEM(
+  BINOP(PLUS,
+   TEMP t34,
+   CONST -4)),
+ _BADSUB,L1)
+LABEL L1
+MOVE(
+ TEMP $v0,
+ MEM(
+  BINOP(PLUS,
+   TEMP t34,
+   BINOP(MUL,
+    TEMP t35,
+    CONST 4))))
 # Basic Blocks: 
+#
+LABEL L3
+MOVE(
+ TEMP t33,
+ CALL(
+  NAME _initArray,
+   CONST 3,
+   CONST 0))
+MOVE(
+ TEMP t34,
+ TEMP t33)
+MOVE(
+ TEMP t35,
+ CONST 0)
+CJUMP(LT,
+ TEMP t35,
+ CONST 0,
+ _BADSUB,L0)
+#
+LABEL L0
+CJUMP(GT,
+ TEMP t35,
+ MEM(
+  BINOP(PLUS,
+   TEMP t34,
+   CONST -4)),
+ _BADSUB,L1)
 #
 LABEL L1
 MOVE(
- TEMP t33,
- CALL(
-  NAME _initArray,
-   CONST 3,
-   CONST 0))
+ TEMP $v0,
+ MEM(
+  BINOP(PLUS,
+   TEMP t34,
+   BINOP(MUL,
+    TEMP t35,
+    CONST 4))))
 JUMP(
- NAME L0)
-LABEL L0
+ NAME L2)
+LABEL L2
 # Trace Scheduled: 
-LABEL L1
+LABEL L3
 MOVE(
  TEMP t33,
  CALL(
   NAME _initArray,
    CONST 3,
    CONST 0))
-JUMP(
- NAME L0)
+MOVE(
+ TEMP t34,
+ TEMP t33)
+MOVE(
+ TEMP t35,
+ CONST 0)
+CJUMP(LT,
+ TEMP t35,
+ CONST 0,
+ _BADSUB,L0)
 LABEL L0
+CJUMP(GT,
+ TEMP t35,
+ MEM(
+  BINOP(PLUS,
+   TEMP t34,
+   CONST -4)),
+ _BADSUB,L1)
+LABEL L1
+MOVE(
+ TEMP $v0,
+ MEM(
+  BINOP(PLUS,
+   TEMP t34,
+   BINOP(MUL,
+    TEMP t35,
+    CONST 4))))
+JUMP(
+ NAME L2)
+LABEL L2
 # Instructions: 
-L1:
-    li t34 3
-	move $a0 t34
-    li t35 0
-	move $a1 t35
-		jal _initArray
-    move t33 $v0
-    b  L0
+L3:
+  li t36 3
+	move $a0 t36
+	move $a1 $0
+	jal _initArray
+  move t33 $v0 
+  move t34 t33 
+  move t35 $0 
+	blt t35 0 _BADSUB  
 L0:
+  li t38 -4
+  li t39 -4
+	lw t37 (t38)
+	bgt t35 $0 _BADSUB  
+L1:
+	mulo t41 t35 4
+	mulo t42 t35 4
+	lw t40 (t41)
+  move $v0 $0 
+  b  L2
+L2:
 END tigermain

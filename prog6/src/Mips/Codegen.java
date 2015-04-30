@@ -6,7 +6,9 @@ import Temp.LabelList;
 
 import java.util.Hashtable;
 
+
 public class Codegen {
+	
   MipsFrame frame;
   public Codegen(MipsFrame f) {frame = f;}
 
@@ -62,17 +64,20 @@ public class Codegen {
   }
 
   void munchStm(Tree.MOVE s) {
-	  emit(new Assem.MOVE("    move `d0 `s0", munchExp(s.dst), munchExp(s.src)));
+	  System.out.println("MOVE"); 
+	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), munchExp(s.src)));
   }
 
   void munchStm(Tree.UEXP s) {
+	System.out.println("UEXP");
     munchExp(s.exp);
   }
 
-  void munchStm(Tree.JUMP s) {	  
+  void munchStm(Tree.JUMP s) {
+	  System.out.println("JUMP");
 	  Tree.Exp t = s.exp;
 	  if (t instanceof Tree.NAME){
-		  emit(new Assem.OPER("    b  `j0" , null, null, s.targets));
+		  emit(new Assem.OPER("  b  `j0" , null, null, s.targets));
 	  }
 	  
   }
@@ -92,9 +97,49 @@ public class Codegen {
   }
 
   void munchStm(Tree.CJUMP s) {
+	  if (CJUMP[s.relop] == "beq"){
+		  if (s.right instanceof Tree.CONST){
+			  int val = ((Tree.CONST) s.right).value;
+			  emit(new Assem.OPER("  beq `d0 "+val+" `j0  ",L(munchExp(s.left)), null, new LabelList(s.iftrue, null)));
+			  return;
+		  }
+		  if (s.left instanceof Tree.CONST){
+			  int val = ((Tree.CONST) s.left).value;
+			  emit(new Assem.OPER("  beq `d0 "+val+" `j0  ", L(munchExp(s.right)), null, new LabelList(s.iftrue, null)));
+			  return;
+		  }
+		  emit(new Assem.OPER("  beq `d0 `s0 `j0  ", L(munchExp(s.left)), L(munchExp(s.right)), new LabelList(s.iftrue, null)));
+	  }
+	  if(CJUMP[s.relop] == "blt"){
+		  if (s.right instanceof Tree.CONST && !(s.left instanceof Tree.CONST)){
+			  int val = ((Tree.CONST) s.right).value;
+			  emit(new Assem.OPER("\tblt `d0 "+val+" `j0  ",L(munchExp(s.left)), null, new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
+			  return;
+		  }
+		  if (s.left instanceof Tree.CONST){
+			  int val = ((Tree.CONST) s.left).value;
+			  emit(new Assem.OPER("\tblt `d0 "+val+" `j0  ", L(munchExp(s.right)), null, new LabelList(s.iftrue, null)));
+			  return;
+		  }
+		  emit(new Assem.OPER("\tblt `d0 `s0 `j0  ", L(munchExp(s.left)), L(munchExp(s.right)), new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
+	  }
+	  if(CJUMP[s.relop] == "bgt"){
+		  if (s.right instanceof Tree.CONST && !(s.left instanceof Tree.CONST)){
+			  int val = ((Tree.CONST) s.right).value;
+			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0",L(munchExp(s.left)), null, new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
+			  return;
+		  }
+		  if (s.left instanceof Tree.CONST){
+			  int val = ((Tree.CONST) s.left).value;
+			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0  ", L(munchExp(s.right)), null, new LabelList(s.iftrue, null)));
+			  return;
+		  }
+		  emit(new Assem.OPER("\tbgt `d0 `s0 `j0  ", L(munchExp(s.left)), L(munchExp(s.right)), new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
+	  }
   }
 
   void munchStm(Tree.LABEL l) {
+	  
 	  emit(new Assem.LABEL(l.label.toString() + ":", l.label));
   }
 
@@ -116,20 +161,22 @@ public class Codegen {
   }
 
   Temp munchExp(Tree.CONST e) {
+	  System.out.println("CONST:"+e.value);
+	  // Use zero register
+	  if(e.value == 0)
+		  return frame.ZERO;
 	  Temp t = new Temp();
-	  emit(new Assem.OPER("    li `d0 " + e.value, L(t), null));
+	  emit(new Assem.OPER("  li `d0 " + e.value, L(t), null));
 	  return t;
   }
 
   Temp munchExp(Tree.NAME e) {
-	System.out.println("NAME ");
-	String name = e.label.toString();
-	//emit(OPER("jal "+name.));
-    return frame.RV();
+	 System.out.println("NAME"); 
+    return frame.ZERO;
   }
 
   Temp munchExp(Tree.TEMP e) {
-	System.out.println("TEMP");
+	System.out.println("TEMP:"+e.temp.toString());
     if (e.temp == frame.FP) {
       Temp t = new Temp();
       emit(OPER("addu `d0 `s0 " + frame.name + "_framesize",
@@ -165,18 +212,17 @@ public class Codegen {
   }
 
   Temp munchExp(Tree.BINOP e) {
-	  System.out.println("BINOP");
 	  Temp t = new Temp();
 	  String b = BINOP[e.binop];
 	  if (b.equals("mulo")){
 		  if (e.left instanceof Tree.CONST && ((Tree.CONST) e.left).value == 2){
 			  // left shift
-			  emit(OPER("sll `d0 `s0 " + 1, L(t), L(munchExp(e.right))));
+			  emit(OPER("  sll `d0 `s0 " + 1, L(t), L(munchExp(e.right))));
 			  return t;
 		  }
 		  if (e.right instanceof Tree.CONST && ((Tree.CONST) e.right).value == 2){
 			  // left shift
-			  emit(OPER("sll" + " `d0 `s0 " + 1 , L(t), L(munchExp(e.left))));
+			  emit(OPER("  sll" + " `d0 `s0 " + 1 , L(t), L(munchExp(e.left))));
 			  return t;
 		  }  
 	  }
@@ -196,24 +242,38 @@ public class Codegen {
               emit(OPER(b+" `d0 `s0 " + ((Tree.CONST) e.left).value, L(t), L(munchExp(e.right))));
               return t;
 		  }
-		  // Maybe ...
-		  //emit(OPER(b+" `d0,`s0,`s1 ", L(munchExp(e.left)), L(munchExp(e.right))));
+		  emit(OPER(b+" `s1 `d0 `s0 ", L(munchExp(e.left)), L(munchExp(e.right), L(t))));
           return t;
 	  }
-	  
 	  return null;
   }
 
   Temp munchExp(Tree.MEM e) {
-	System.out.println("MEM");
+	  System.out.print("MEM: ");
+	if(e.exp instanceof Tree.CONST){
+		System.out.println("CONST");
+		Temp t = new Temp();
+		emit(OPER("lw `d0 `s0", L(t), L(munchExp((Tree.CONST)e.exp))));
+		return t;
+	}
+	if(e.exp instanceof Tree.TEMP){
+		System.out.println("TEMP");
+		return munchExp((Tree.TEMP)e.exp);
+	}
+	if(e.exp instanceof Tree.BINOP){
+		System.out.println(" BINOP");
+		Temp t = new Temp();
+		System.out.println(((Tree.BINOP)e.exp).binop);
+		emit(OPER("lw `d0 (`s0)", L(t), L(munchExp(((Tree.BINOP)e.exp).right), L(munchExp(((Tree.BINOP)e.exp).right)))));
+	}
     return frame.ZERO;
   }
 
   Temp munchExp(Tree.CALL s) {
-	System.out.println("CALL");
 	if(s.func instanceof Tree.NAME){
 		emit(OPER("jal "+((Tree.NAME)s.func).label.toString(), frame.calldefs, munchArgs(0, s.args)));
 	}
+	// Will RV() choose appropriate $V0/$V1 
     return frame.RV();
   }
 
