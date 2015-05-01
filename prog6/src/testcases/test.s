@@ -164,15 +164,10 @@ L3:
   move t35 $0 
 	blt t35 0 _BADSUB  
 L0:
-  li t38 -4
-  li t39 -4
-	lw t37 (t38)
-	bgt t35 $0 _BADSUB  
+	lw t37 -4(t34)
+	bgt t35 t37 _BADSUB  
 L1:
-	mulo t41 t35 4
-	mulo t42 t35 4
-	lw t40 (t41)
-  move $v0 $0 
+	lw t38 -1(t34)
   b  L2
 L2:
 END tigermain

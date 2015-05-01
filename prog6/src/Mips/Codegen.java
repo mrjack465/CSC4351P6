@@ -6,6 +6,8 @@ import Temp.LabelList;
 
 import java.util.Hashtable;
 
+import java_cup.internal_error;
+
 
 public class Codegen {
 	
@@ -65,6 +67,14 @@ public class Codegen {
 
   void munchStm(Tree.MOVE s) {
 	  System.out.println("MOVE"); 
+	  if(s.src instanceof Tree.MEM){
+		  System.out.println("L----->MEM");
+		  if(s.dst instanceof Tree.TEMP)
+			  System.out.println("R----->TEMP");
+		  System.out.println();
+		  munchExp(s.src);
+		  return;
+	  }
 	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), munchExp(s.src)));
   }
 
@@ -124,16 +134,16 @@ public class Codegen {
 		  emit(new Assem.OPER("\tblt `d0 `s0 `j0  ", L(munchExp(s.left)), L(munchExp(s.right)), new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
 	  }
 	  if(CJUMP[s.relop] == "bgt"){
-		  if (s.right instanceof Tree.CONST && !(s.left instanceof Tree.CONST)){
-			  int val = ((Tree.CONST) s.right).value;
-			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0",L(munchExp(s.left)), null, new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
-			  return;
-		  }
-		  if (s.left instanceof Tree.CONST){
-			  int val = ((Tree.CONST) s.left).value;
-			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0  ", L(munchExp(s.right)), null, new LabelList(s.iftrue, null)));
-			  return;
-		  }
+//		  if (s.right instanceof Tree.CONST && !(s.left instanceof Tree.CONST)){
+//			  int val = ((Tree.CONST) s.right).value;
+//			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0",L(munchExp(s.left)), null, new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
+//			  return;
+//		  }
+//		  if (s.left instanceof Tree.CONST){
+//			  int val = ((Tree.CONST) s.left).value;
+//			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0  ", L(munchExp(s.right)), null, new LabelList(s.iftrue, null)));
+//			  return;
+//		  }
 		  emit(new Assem.OPER("\tbgt `d0 `s0 `j0  ", L(munchExp(s.left)), L(munchExp(s.right)), new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
 	  }
   }
@@ -162,7 +172,7 @@ public class Codegen {
 
   Temp munchExp(Tree.CONST e) {
 	  System.out.println("CONST:"+e.value);
-	  // Use zero register
+	  // Use zero register instead of creating new temp
 	  if(e.value == 0)
 		  return frame.ZERO;
 	  Temp t = new Temp();
@@ -177,6 +187,10 @@ public class Codegen {
 
   Temp munchExp(Tree.TEMP e) {
 	System.out.println("TEMP:"+e.temp.toString());
+	// if temp equals the RV register, just return the register; don't create new temp
+	if(e.temp == frame.RV()){
+		return frame.RV();
+	}
     if (e.temp == frame.FP) {
       Temp t = new Temp();
       emit(OPER("addu `d0 `s0 " + frame.name + "_framesize",
@@ -250,21 +264,34 @@ public class Codegen {
 
   Temp munchExp(Tree.MEM e) {
 	  System.out.print("MEM: ");
-	if(e.exp instanceof Tree.CONST){
-		System.out.println("CONST");
-		Temp t = new Temp();
-		emit(OPER("lw `d0 `s0", L(t), L(munchExp((Tree.CONST)e.exp))));
-		return t;
-	}
+//	if(e.exp instanceof Tree.CONST){
+//		System.out.println("CONST");
+//		Temp t = new Temp();
+//		emit(OPER("lw `d0 `s0", L(t), L(munchExp((Tree.CONST)e.exp))));
+//		return t;
+//	}
 	if(e.exp instanceof Tree.TEMP){
-		System.out.println("TEMP");
 		return munchExp((Tree.TEMP)e.exp);
 	}
 	if(e.exp instanceof Tree.BINOP){
-		System.out.println(" BINOP");
+		System.out.println("BINOP "+BINOP[((Tree.BINOP)e.exp).binop]);
+		Tree.BINOP b = (Tree.BINOP)e.exp;
+//		if(b.right instanceof Tree.CONST){
+//			System.out.println("______________");
+//			int rightVal = ((Tree.CONST)b.right).value;
+//			Temp t = new Temp();
+//			emit(OPER("lw `d0 "+rightVal+"(`s0)", L(t), L(munchExp(b.left))));
+//			return t; 
+//		}
+		Tree.Exp left = b.left;
+		int right = -1;
+		if(b.left instanceof Tree.CONST)
+			left = ((Tree.CONST)b.left);
+		if(b.right instanceof Tree.CONST)
+			right = ((Tree.CONST)b.right).value;
 		Temp t = new Temp();
-		System.out.println(((Tree.BINOP)e.exp).binop);
-		emit(OPER("lw `d0 (`s0)", L(t), L(munchExp(((Tree.BINOP)e.exp).right), L(munchExp(((Tree.BINOP)e.exp).right)))));
+		emit(OPER("lw `d0 " +right+"(`s0)", L(t), L(munchExp(left))));
+		return t;
 	}
     return frame.ZERO;
   }
