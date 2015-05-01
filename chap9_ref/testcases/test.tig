@@ -1,7 +1,7 @@
+let 
+		type a = array of int
 
-
-
-		if  4 = 0 
-			then 1
-			else 5
-
+		var arr1: a := a [10] of 0
+in
+		arr1[4]
+end

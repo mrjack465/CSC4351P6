@@ -1,71 +1,119 @@
 PROCEDURE tigermain
 # Before canonicalization: 
-SEQ(
- SEQ(
-  MOVE(
-   TEMP t39,
-   CONST 4),
-  MOVE(
-   TEMP t40,
-   CONST 8)),
- MOVE(
-  TEMP t41,
-  BINOP(PLUS,
-   CONST 9,
-   TEMP t40)))
+MOVE(
+ TEMP $v0,
+ ESEQ(
+  SEQ(
+   SEQ(
+    CJUMP(EQ,
+     CONST 4,
+     CONST 0,
+     L0,L1),
+    SEQ(
+     SEQ(
+      LABEL L0,
+      SEQ(
+       MOVE(
+        TEMP t33,
+        CONST 1),
+       JUMP(
+        NAME L2))),
+     SEQ(
+      LABEL L1,
+      SEQ(
+       MOVE(
+        TEMP t33,
+        CONST 5),
+       JUMP(
+        NAME L2))))),
+   LABEL L2),
+  TEMP t33))
 # After canonicalization: 
+CJUMP(EQ,
+ CONST 4,
+ CONST 0,
+ L0,L1)
+LABEL L0
 MOVE(
- TEMP t39,
- CONST 4)
+ TEMP t33,
+ CONST 1)
+JUMP(
+ NAME L2)
+LABEL L1
 MOVE(
- TEMP t40,
- CONST 8)
+ TEMP t33,
+ CONST 5)
+JUMP(
+ NAME L2)
+LABEL L2
 MOVE(
- TEMP t41,
- BINOP(PLUS,
-  CONST 9,
-  TEMP t40))
+ TEMP $v0,
+ TEMP t33)
 # Basic Blocks: 
 #
-LABEL L3
+LABEL L4
+CJUMP(EQ,
+ CONST 4,
+ CONST 0,
+ L0,L1)
+#
+LABEL L0
 MOVE(
- TEMP t39,
- CONST 4)
-MOVE(
- TEMP t40,
- CONST 8)
-MOVE(
- TEMP t41,
- BINOP(PLUS,
-  CONST 9,
-  TEMP t40))
+ TEMP t33,
+ CONST 1)
 JUMP(
  NAME L2)
+#
+LABEL L1
+MOVE(
+ TEMP t33,
+ CONST 5)
+JUMP(
+ NAME L2)
+#
 LABEL L2
+MOVE(
+ TEMP $v0,
+ TEMP t33)
+JUMP(
+ NAME L3)
+LABEL L3
 # Trace Scheduled: 
-LABEL L3
+LABEL L4
+CJUMP(EQ,
+ CONST 4,
+ CONST 0,
+ L0,L1)
+LABEL L1
 MOVE(
- TEMP t39,
- CONST 4)
+ TEMP t33,
+ CONST 5)
+LABEL L2
 MOVE(
- TEMP t40,
- CONST 8)
+ TEMP $v0,
+ TEMP t33)
+JUMP(
+ NAME L3)
+LABEL L0
 MOVE(
- TEMP t41,
- BINOP(PLUS,
-  CONST 9,
-  TEMP t40))
+ TEMP t33,
+ CONST 1)
 JUMP(
  NAME L2)
-LABEL L2
+LABEL L3
 # Instructions: 
-L3:
-  li t42 4
-  move t39 t42 
-  li t43 8
-  move t40 t43 
-	add t44 t40 9
-  move t41 t44 
-  b  L2
+L4:
+  li t34 4
+  beq t34 0 L0  
+L1:
+  li t35 5
+  move t33 t35 
 L2:
+  move $v0 t33 
+  b  L3
+L0:
+  li t36 1
+  move t33 t36 
+  b  L2
+L3:
 END tigermain

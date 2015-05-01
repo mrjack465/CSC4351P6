@@ -1,7 +1,4 @@
-let 
-	var x := 4
-	var y := 8
-	var z := 9 + y
-in 
 
-end
+		if  4 = 0 
+			then 1
+			else 5
