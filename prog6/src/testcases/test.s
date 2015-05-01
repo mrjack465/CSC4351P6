@@ -167,7 +167,9 @@ L0:
 	lw t37 -4(t34)
 	bgt t35 t37 _BADSUB  
 L1:
-	lw t38 -1(t34)
+	sll t39 t35 2
+	add t38 t34 t39 
+	lw $v0 (t38)
   b  L2
 L2:
 END tigermain

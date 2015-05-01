@@ -134,20 +134,32 @@ public class Codegen {
 		  emit(new Assem.OPER("\tblt `d0 `s0 `j0  ", L(munchExp(s.left)), L(munchExp(s.right)), new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
 	  }
 	  if(CJUMP[s.relop] == "bgt"){
-//		  if (s.right instanceof Tree.CONST && !(s.left instanceof Tree.CONST)){
-//			  int val = ((Tree.CONST) s.right).value;
-//			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0",L(munchExp(s.left)), null, new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
-//			  return;
-//		  }
-//		  if (s.left instanceof Tree.CONST){
-//			  int val = ((Tree.CONST) s.left).value;
-//			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0  ", L(munchExp(s.right)), null, new LabelList(s.iftrue, null)));
-//			  return;
-//		  }
-		  emit(new Assem.OPER("\tbgt `d0 `s0 `j0  ", L(munchExp(s.left)), L(munchExp(s.right)), new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
+		  if (s.left instanceof Tree.CONST && !(s.right instanceof Tree.CONST)){
+			  int val = ((Tree.CONST) s.left).value;
+			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0",L(munchExp(s.left)), null, new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
+			  return;
+		  }
+		  if (s.right instanceof Tree.CONST){
+			  int val = ((Tree.CONST) s.right).value;
+			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0  ", L(munchExp(s.left)), null, new LabelList(s.iftrue, null)));
+			  return;
+		  }
+		  emit(new Assem.OPER("\t"+CJUMP[s.relop]+" `d0 `s0 `j0  ", L(munchExp(s.left)), L(munchExp(s.right)), new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
+	  }
+	  if(CJUMP[s.relop] == "ble" || CJUMP[s.relop] == "bge"){
+		  if (s.right instanceof Tree.CONST && !(s.left instanceof Tree.CONST)){
+			  int val = ((Tree.CONST) s.right).value;
+			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0",L(munchExp(s.left)), null, new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
+			  return;
+		  }
+		  if (s.left instanceof Tree.CONST){
+			  int val = ((Tree.CONST) s.left).value;
+			  emit(new Assem.OPER("\tbgt `d0 "+val+" `j0  ", L(munchExp(s.right)), null, new LabelList(s.iftrue, null)));
+			  return;
+		  }
+		  emit(new Assem.OPER("\t"+CJUMP[s.relop]+" `d0 `s0 `j0  ", L(munchExp(s.left)), L(munchExp(s.right)), new LabelList(s.iftrue, new LabelList(s.iffalse, null))));
 	  }
   }
-
   void munchStm(Tree.LABEL l) {
 	  
 	  emit(new Assem.LABEL(l.label.toString() + ":", l.label));
@@ -225,18 +237,37 @@ public class Codegen {
     return shift;
   }
 
+  public int powerOfTwo(int num){
+	  //result = 0, 2
+	  double num2 = (double) num;
+	  int count = 0;
+	  double results = 0;
+	  for (double i = 2; i <= num2; i = i * 2){
+		  count++;
+		  results = num2 / i;
+	  }
+	  
+	  if (results != 1)
+	  {
+		  return -1;
+	  }
+	  
+	  return count ;
+  }
+  
   Temp munchExp(Tree.BINOP e) {
 	  Temp t = new Temp();
 	  String b = BINOP[e.binop];
 	  if (b.equals("mulo")){
-		  if (e.left instanceof Tree.CONST && ((Tree.CONST) e.left).value == 2){
+		  
+		  if (e.left instanceof Tree.CONST && powerOfTwo(((Tree.CONST) e.left).value) != -1){
 			  // left shift
-			  emit(OPER("  sll `d0 `s0 " + 1, L(t), L(munchExp(e.right))));
+			  emit(OPER("sll `d0 `s0 " + powerOfTwo(((Tree.CONST) e.left).value), L(t), L(munchExp(e.right))));
 			  return t;
 		  }
-		  if (e.right instanceof Tree.CONST && ((Tree.CONST) e.right).value == 2){
+		  if (e.right instanceof Tree.CONST && powerOfTwo(((Tree.CONST) e.right).value) != -1){
 			  // left shift
-			  emit(OPER("  sll" + " `d0 `s0 " + 1 , L(t), L(munchExp(e.left))));
+			  emit(OPER("sll" + " `d0 `s0 " + powerOfTwo(((Tree.CONST) e.right).value) , L(t), L(munchExp(e.left))));
 			  return t;
 		  }  
 	  }
@@ -259,39 +290,28 @@ public class Codegen {
 		  emit(OPER(b+" `s1 `d0 `s0 ", L(munchExp(e.left)), L(munchExp(e.right), L(t))));
           return t;
 	  }
+	  
 	  return null;
   }
 
+
   Temp munchExp(Tree.MEM e) {
 	  System.out.print("MEM: ");
-//	if(e.exp instanceof Tree.CONST){
-//		System.out.println("CONST");
-//		Temp t = new Temp();
-//		emit(OPER("lw `d0 `s0", L(t), L(munchExp((Tree.CONST)e.exp))));
-//		return t;
-//	}
-	if(e.exp instanceof Tree.TEMP){
-		return munchExp((Tree.TEMP)e.exp);
-	}
 	if(e.exp instanceof Tree.BINOP){
 		System.out.println("BINOP "+BINOP[((Tree.BINOP)e.exp).binop]);
 		Tree.BINOP b = (Tree.BINOP)e.exp;
-//		if(b.right instanceof Tree.CONST){
-//			System.out.println("______________");
-//			int rightVal = ((Tree.CONST)b.right).value;
-//			Temp t = new Temp();
-//			emit(OPER("lw `d0 "+rightVal+"(`s0)", L(t), L(munchExp(b.left))));
-//			return t; 
-//		}
-		Tree.Exp left = b.left;
-		int right = -1;
-		if(b.left instanceof Tree.CONST)
-			left = ((Tree.CONST)b.left);
-		if(b.right instanceof Tree.CONST)
-			right = ((Tree.CONST)b.right).value;
-		Temp t = new Temp();
-		emit(OPER("lw `d0 " +right+"(`s0)", L(t), L(munchExp(left))));
-		return t;
+		if(b.right instanceof Tree.CONST){
+			int rightVal = ((Tree.CONST)b.right).value;
+			Temp t = new Temp();
+			emit(OPER("lw `d0 "+rightVal+"(`s0)", L(t), L(munchExp(b.left))));
+			return t; 
+		}
+		if(b.right instanceof Tree.BINOP){
+			Temp t = munchExp(b);
+			Tree.BINOP right = (Tree.BINOP)b.right;
+			emit(OPER("lw `d0 (`s0)", L(frame.RV()), L(t)));
+			return t; 
+		}
 	}
     return frame.ZERO;
   }
