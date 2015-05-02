@@ -66,39 +66,13 @@ public class Codegen {
       throw new Error("Codegen.munchStm");
   }
 
-// 
-//  void munchStm(Tree.MOVE s) {
-//	  System.out.print("MOVE"); 
-//	  if(s.src instanceof Tree.MEM){
-//		  System.out.println("-----> MEM: LOAD WORD");
-//		  munchExp(s.src);
-//		  return;
-//	  }
-//	  if(s.src instanceof Tree.NAME && s.dst instanceof Tree.MEM){
-//		  Temp t = munchExp((Tree.NAME)s.src);
-//		  
-//	  }
-//	  if(s.dst instanceof Tree.MEM){
-//		  System.out.println("------> MEM: STORE WORD");
-//		  if(s.src instanceof Tree.CONST && ((Tree.MEM)s.dst).exp instanceof Tree.BINOP){
-//			  Temp t = munchExp(s.src);
-//			  Tree.BINOP b = ((Tree.BINOP)((Tree.MEM)s.dst).exp);
-//			  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(b))));
-//			  return;
-//		  }
-//		  if(s.src instanceof Tree.NAME){
-//			  Tree.NAME n = (Tree.NAME)s.src;
-//			  emit(OPER("sw `d0 (`s0)", L(munchExp(s.dst)), L(frame.ZERO)));
-//			  return;  
-//		  }
-////		  munchStoreExp((Tree.MEM)s.dst);
-//	  }
-//	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), munchExp(s.src)));
-//  }
-  
   
   void munchStm(Tree.MOVE s){
 	  Temp t = null; 
+	  if(s.dst instanceof Tree.MEM && s.src instanceof Tree.MEM){
+		  t = munchExp(((Tree.MEM)s.dst), munchExp(s.src));
+		  return;
+	  }
 	  if(s.src instanceof Tree.MEM){
 		  munchExp((Tree.MEM)s.src);
 		  return;
@@ -113,36 +87,58 @@ public class Codegen {
 	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), t));
   }
   
-Temp munchExp(Tree.MEM e, Temp temp){
-  System.out.println("STORE-MEM:");
-  if(e.exp instanceof Tree.BINOP){
-		Tree.BINOP b = (Tree.BINOP)e.exp;
-		// Store Word
-		if(b.right instanceof Tree.CONST){
-			int rightVal = ((Tree.CONST)b.right).value;
-			emit(OPER("sw `d0 "+rightVal+"(`s0)", L(temp), L(munchExp(b.left))));
-			return temp; 
+	  Temp munchExp(Tree.MEM e) {
+		if(e.exp instanceof Tree.BINOP){
+			Tree.BINOP b = (Tree.BINOP)e.exp;
+			// Load Word
+			if(b.right instanceof Tree.CONST){
+				int rightVal = ((Tree.CONST)b.right).value;
+				Temp t = new Temp();
+				emit(OPER("lw `d0 "+rightVal+"(`s0)", L(t), L(munchExp(b.left))));
+				return t; 
+			}
+			if(b.right instanceof Tree.BINOP){
+				//Temp t = munchExp(b);
+				Temp t = new Temp();
+				emit(OPER("lw `d0 (`s0)", L(t), L(munchExp((Tree.BINOP)b))));
+				return t; 
+			}
 		}
-		if(b.right instanceof Tree.BINOP){
-			Temp t = munchExp(b);
-			emit(OPER("sw `d0 (`s0)", L(temp), L(t)));
-			return t; 
+		System.out.println("MEM ERROR");
+    	return frame.ZERO;
+  	}
+  
+	Temp munchExp(Tree.MEM e, Temp temp){
+	  System.out.println("STORE-MEM:");
+	  if(e.exp instanceof Tree.BINOP){
+			Tree.BINOP b = (Tree.BINOP)e.exp;
+			// Store Word
+			if(b.right instanceof Tree.CONST){
+				int rightVal = ((Tree.CONST)b.right).value;
+				emit(OPER("sw `d0 "+rightVal+"(`s0)", L(temp), L(munchExp(b.left))));
+				return temp; 
+			}
+			if(b.right instanceof Tree.BINOP){
+				Temp t = munchExp(b);
+				emit(OPER("sw `d0 (`s0)", L(temp), L(t)));
+				return t; 
+			}
 		}
+	  if(e.exp instanceof Tree.NAME){
+		  Temp t = new Temp();
+		  Tree.NAME n = (Tree.NAME)e.exp;
+		  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(n))));
+		  return t;  
+	  }
+	  if(e.exp instanceof Tree.TEMP){
+		  Tree.TEMP t = (Tree.TEMP)e.exp;
+		  emit(OPER("sw `d0 (`s0)", L(temp), L(munchExp(t)) ));
+		  return t.temp;
+	  }
+	  // Error
+	  System.out.println("MEM-STORE ERROR"+ e.exp.toString());
+	  return frame.ZERO;
 	}
-  if(e.exp instanceof Tree.NAME){
-	  Temp t = new Temp();
-	  Tree.NAME n = (Tree.NAME)e.exp;
-	  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(n))));
-	  return t;  
-  }
-  if(e.exp instanceof Tree.TEMP){
-	  Tree.TEMP t = (Tree.TEMP)e.exp;
-	  emit(OPER("sw `d0 (`s0", L(temp), L(munchExp(t)) ));
-  }
-  // Error
-  System.out.println("ERROR"+ e.exp.toString());
-  return frame.ZERO;
-}
 
   void munchStm(Tree.UEXP s) {
 	System.out.println("UEXP");
@@ -357,28 +353,8 @@ Temp munchExp(Tree.MEM e, Temp temp){
 		  emit(OPER(b+" `s1 `d0 `s0 ", L(munchExp(e.left)), L(munchExp(e.right), L(t))));
           return t;
 	  }
-	  
+	  System.out.println("BINOP ERROR");
 	  return frame.ZERO;
-  }
-
-
-  Temp munchExp(Tree.MEM e) {
-	if(e.exp instanceof Tree.BINOP){
-		Tree.BINOP b = (Tree.BINOP)e.exp;
-		// Load Word
-		if(b.right instanceof Tree.CONST){
-			int rightVal = ((Tree.CONST)b.right).value;
-			Temp t = new Temp();
-			emit(OPER("lw `d0 "+rightVal+"(`s0)", L(t), L(munchExp(b.left))));
-			return t; 
-		}
-		if(b.right instanceof Tree.BINOP){
-			Temp t = munchExp(b);
-			emit(OPER("lw `d0 (`s0)", L(frame.RV()), L(t)));
-			return t; 
-		}
-	}
-    return frame.ZERO;
   }
   
   Temp munchExp(Tree.CALL s) {

@@ -297,9 +297,10 @@ L3:
 	lw t46 -4(t37)
 	bgt t38 t46 _BADSUB  
 L4:
-	sll t48 t38 2
-	add t47 t37 t48 
-	lw $v0 (t47)
+	sll t49 t38 2
+	add t48 t37 t49 
+	lw t47 (t48)
+	sw t47 (t39)
   b  L5
 L5:
 END tigermain
