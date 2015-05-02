@@ -169,7 +169,7 @@ public class Codegen {
 	  System.out.println("JUMP");
 	  Tree.Exp t = s.exp;
 	  if (t instanceof Tree.NAME){
-		  emit(new Assem.OPER("  b  `j0" , null, null, s.targets));
+		  emit(new Assem.OPER("\tb `j0" , null, null, s.targets));
 	  }
 	  
   }
@@ -364,9 +364,10 @@ public class Codegen {
 	  if (b.equals("add") || b.equals("sub") || b.equals("mulo") || b.equals("div")){
 		  if(b.equals("add") && e.left instanceof Tree.TEMP && e.right instanceof Tree.CONST){
 			  Tree.CONST right = (Tree.CONST)e.right;
-			  if(((Tree.TEMP)e.left).temp == frame.FP())
+			  if(((Tree.TEMP)e.left).temp == frame.FP()){
 				  emit(OPER("add `d0 `s0 "+right.value +"+" + frame.name + "_framesize", L(t), L(frame.SP)));
 			  return t;
+			  }
 		  }
 		  if (e.right instanceof Tree.CONST) {
               emit(OPER(b+" `d0 `s0 " + ((Tree.CONST) e.right).value, L(t), L(munchExp(e.left))));
