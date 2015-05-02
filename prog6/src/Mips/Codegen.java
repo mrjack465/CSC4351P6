@@ -3,12 +3,18 @@ import Temp.Temp;
 import Temp.TempList;
 import Temp.Label;
 import Temp.LabelList;
+import Tree.Exp;
 
 import java.util.HashMap;
 import java.util.Hashtable;
 
 import java_cup.internal_error;
 
+/*
+ * TODO:
+ * 
+ * Optimize adding when using MOVE (TEMP, BIN)
+ */
 
 public class Codegen {
 	
@@ -82,8 +88,6 @@ public class Codegen {
 		  t = munchExp((Tree.MEM)s.dst, t);
 		  return;
 	  }
-	  if(t == null)
-		  System.out.println("HERE");
 	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), t));
   }
   
@@ -91,6 +95,15 @@ public class Codegen {
 		if(e.exp instanceof Tree.BINOP){
 			Tree.BINOP b = (Tree.BINOP)e.exp;
 			// Load Word
+			if(b.left instanceof Tree.TEMP && b.right instanceof Tree.CONST && BINOP[b.binop].equals("add")){
+				Tree.TEMP left = ((Tree.TEMP)b.left);
+				Tree.CONST right = ((Tree.CONST)b.right);
+				if(left.temp == frame.FP){
+					Temp t = new Temp();
+					emit(OPER("lw `d0 "+right.value+"+"+frame.name.toString()+"_framesize(`s0)", L(t), L(frame.SP)));
+					return t;
+				}
+			}
 			if(b.right instanceof Tree.CONST){
 				int rightVal = ((Tree.CONST)b.right).value;
 				Temp t = new Temp();
@@ -98,13 +111,12 @@ public class Codegen {
 				return t; 
 			}
 			if(b.right instanceof Tree.BINOP){
-				//Temp t = munchExp(b);
 				Temp t = new Temp();
 				emit(OPER("lw `d0 (`s0)", L(t), L(munchExp((Tree.BINOP)b))));
 				return t; 
 			}
 		}
-		System.out.println("MEM ERROR");
+		System.out.println("MEM Error");
     	return frame.ZERO;
   	}
   
@@ -113,6 +125,14 @@ public class Codegen {
 	  if(e.exp instanceof Tree.BINOP){
 			Tree.BINOP b = (Tree.BINOP)e.exp;
 			// Store Word
+			if(b.left instanceof Tree.TEMP && b.right instanceof Tree.CONST && BINOP[b.binop].equals("add")){
+				Tree.TEMP left = ((Tree.TEMP)b.left);
+				Tree.CONST right = ((Tree.CONST)b.right);
+				if(left.temp == frame.FP){
+					emit(OPER("sw `d0 "+right.value+"+"+frame.name.toString()+"_framesize(`s0)", L(temp), L(frame.SP)));
+					return temp;
+				}
+			}
 			if(b.right instanceof Tree.CONST){
 				int rightVal = ((Tree.CONST)b.right).value;
 				emit(OPER("sw `d0 "+rightVal+"(`s0)", L(temp), L(munchExp(b.left))));
@@ -268,8 +288,7 @@ public class Codegen {
 	}
     if (e.temp == frame.FP) {
       Temp t = new Temp();
-      emit(OPER("addu `d0 `s0 " + frame.name + "_framesize",
-		L(t), L(frame.SP)));
+      emit(OPER("addu `d0 `s0 " + frame.name + "_framesize", L(t), L(frame.SP)));
       return t;
     }
     return e.temp;
@@ -318,6 +337,7 @@ public class Codegen {
 	  return count ;
   }
   
+  
   Temp munchExp(Tree.BINOP e) {
 	  Temp t = new Temp();
 	  String b = BINOP[e.binop];
@@ -342,6 +362,12 @@ public class Codegen {
 		  }
 	  }
 	  if (b.equals("add") || b.equals("sub") || b.equals("mulo") || b.equals("div")){
+		  if(b.equals("add") && e.left instanceof Tree.TEMP && e.right instanceof Tree.CONST){
+			  Tree.CONST right = (Tree.CONST)e.right;
+			  if(((Tree.TEMP)e.left).temp == frame.FP())
+				  emit(OPER("add `d0 `s0 "+right.value +"+" + frame.name + "_framesize", L(t), L(frame.SP)));
+			  return t;
+		  }
 		  if (e.right instanceof Tree.CONST) {
               emit(OPER(b+" `d0 `s0 " + ((Tree.CONST) e.right).value, L(t), L(munchExp(e.left))));
               return t;
