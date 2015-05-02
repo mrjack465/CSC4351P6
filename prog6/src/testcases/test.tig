@@ -1,6 +1,8 @@
-let
-	type arrtype = array of int
-	var arr := arrtype [3] of 1234
+
+let 
+	type rectype = {name:string, major:string}
+	var rec1 := rectype {name="aname",major="AMajor"}
 in
-	arr[1] := 50
+	rec1.name := "n";
+	rec1.major := "AbMajor"
 end

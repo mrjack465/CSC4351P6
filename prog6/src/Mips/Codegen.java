@@ -105,13 +105,13 @@ public class Codegen {
 	  }
 	  t = munchExp(s.src);
 	  if(s.dst instanceof Tree.MEM){
-		  t = munchStoreExp((Tree.MEM)s.dst, t);
+		  t = munchExp((Tree.MEM)s.dst, t);
 		  return;
 	  }
 	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), t));
   }
   
-Temp munchStoreExp(Tree.MEM e, Temp temp){
+Temp munchExp(Tree.MEM e, Temp temp){
   System.out.println("STORE-MEM:");
   if(e.exp instanceof Tree.BINOP){
 		Tree.BINOP b = (Tree.BINOP)e.exp;
