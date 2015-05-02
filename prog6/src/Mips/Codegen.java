@@ -108,6 +108,8 @@ public class Codegen {
 		  t = munchExp((Tree.MEM)s.dst, t);
 		  return;
 	  }
+	  if(t == null)
+		  System.out.println("HERE");
 	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), t));
   }
   
@@ -129,12 +131,16 @@ Temp munchExp(Tree.MEM e, Temp temp){
 	}
   if(e.exp instanceof Tree.NAME){
 	  Temp t = new Temp();
-		  Tree.NAME n = (Tree.NAME)e.exp;
-		  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(n))));
-		  return t;  
+	  Tree.NAME n = (Tree.NAME)e.exp;
+	  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(n))));
+	  return t;  
+  }
+  if(e.exp instanceof Tree.TEMP){
+	  Tree.TEMP t = (Tree.TEMP)e.exp;
+	  emit(OPER("sw `d0 (`s0", L(temp), L(munchExp(t)) ));
   }
   // Error
-  System.out.println("ERROR");
+  System.out.println("ERROR"+ e.exp.toString());
   return frame.ZERO;
 }
 
@@ -352,7 +358,7 @@ Temp munchExp(Tree.MEM e, Temp temp){
           return t;
 	  }
 	  
-	  return null;
+	  return frame.ZERO;
   }
 
 

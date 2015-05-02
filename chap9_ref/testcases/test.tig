@@ -1,7 +1,8 @@
 let 
-	type rectype = {name:string}
-	type arrType = array of int
-	var rec1 := rectype {name="aname"}
+  type rectype = {name:string}
+  type arrType = array of string
+  var rec1 := rectype {name="aname"}
+  var myArr := arrType[9] of ""
 in
-	rec1.name := "n"
+  rec1.name := myArr[2]
 end
