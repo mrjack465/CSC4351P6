@@ -4,6 +4,7 @@ import Temp.TempList;
 import Temp.Label;
 import Temp.LabelList;
 
+import java.util.HashMap;
 import java.util.Hashtable;
 
 import java_cup.internal_error;
@@ -65,24 +66,77 @@ public class Codegen {
       throw new Error("Codegen.munchStm");
   }
 
-  void munchStm(Tree.MOVE s) {
-	  System.out.print("MOVE"); 
+// 
+//  void munchStm(Tree.MOVE s) {
+//	  System.out.print("MOVE"); 
+//	  if(s.src instanceof Tree.MEM){
+//		  System.out.println("-----> MEM: LOAD WORD");
+//		  munchExp(s.src);
+//		  return;
+//	  }
+//	  if(s.src instanceof Tree.NAME && s.dst instanceof Tree.MEM){
+//		  Temp t = munchExp((Tree.NAME)s.src);
+//		  
+//	  }
+//	  if(s.dst instanceof Tree.MEM){
+//		  System.out.println("------> MEM: STORE WORD");
+//		  if(s.src instanceof Tree.CONST && ((Tree.MEM)s.dst).exp instanceof Tree.BINOP){
+//			  Temp t = munchExp(s.src);
+//			  Tree.BINOP b = ((Tree.BINOP)((Tree.MEM)s.dst).exp);
+//			  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(b))));
+//			  return;
+//		  }
+//		  if(s.src instanceof Tree.NAME){
+//			  Tree.NAME n = (Tree.NAME)s.src;
+//			  emit(OPER("sw `d0 (`s0)", L(munchExp(s.dst)), L(frame.ZERO)));
+//			  return;  
+//		  }
+////		  munchStoreExp((Tree.MEM)s.dst);
+//	  }
+//	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), munchExp(s.src)));
+//  }
+  
+  
+  void munchStm(Tree.MOVE s){
+	  Temp t = null; 
 	  if(s.src instanceof Tree.MEM){
-		  System.out.println("-----> MEM: LOAD WORD");
-		  munchExp(s.src);
+		  munchExp((Tree.MEM)s.src);
 		  return;
 	  }
+	  t = munchExp(s.src);
 	  if(s.dst instanceof Tree.MEM){
-		  System.out.println("------> MEM: STORE WORD");
-		  if(s.src instanceof Tree.CONST && ((Tree.MEM)s.dst).exp instanceof Tree.BINOP){
-			  Temp t = munchExp(s.src);
-			  Tree.BINOP b = ((Tree.BINOP)((Tree.MEM)s.dst).exp);
-			  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(b))));
-			  return;
-		  }
+		  t = munchStoreExp((Tree.MEM)s.dst, t);
+		  return;
 	  }
-	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), munchExp(s.src)));
+	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), t));
   }
+  
+Temp munchStoreExp(Tree.MEM e, Temp temp){
+  System.out.println("STORE-MEM:");
+  if(e.exp instanceof Tree.BINOP){
+		Tree.BINOP b = (Tree.BINOP)e.exp;
+		// Load Word
+		if(b.right instanceof Tree.CONST){
+			int rightVal = ((Tree.CONST)b.right).value;
+			emit(OPER("sw `d0 "+rightVal+"(`s0)", L(temp), L(munchExp(b.left))));
+			return temp; 
+		}
+		if(b.right instanceof Tree.BINOP){
+			Temp t = munchExp(b);
+			emit(OPER("sw `d0 (`s0)", L(temp), L(t)));
+			return t; 
+		}
+	}
+  if(e.exp instanceof Tree.NAME){
+	  Temp t = new Temp();
+		  Tree.NAME n = (Tree.NAME)e.exp;
+		  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(n))));
+		  return t;  
+  }
+  // Error
+  System.out.println("ERROR");
+  return frame.ZERO;
+}
 
   void munchStm(Tree.UEXP s) {
 	System.out.println("UEXP");
@@ -167,7 +221,6 @@ public class Codegen {
 	  }
   }
   void munchStm(Tree.LABEL l) {
-	  
 	  emit(new Assem.LABEL(l.label.toString() + ":", l.label));
   }
 
@@ -199,8 +252,10 @@ public class Codegen {
   }
 
   Temp munchExp(Tree.NAME e) {
-	 System.out.println("NAME"); 
-    return frame.ZERO;
+	 System.out.println("NAME");
+	 Temp t = new Temp();
+	 emit(OPER("la `d0 `j0",L(t), null ,new LabelList(e.label, null)));
+	 return t;
   }
 
   Temp munchExp(Tree.TEMP e) {
@@ -319,6 +374,32 @@ public class Codegen {
 	}
     return frame.ZERO;
   }
+  
+//  Temp munchStoreExp(Tree.MEM e){
+//	  System.out.println("STORE-MEM:");
+//	  if(e.exp instanceof Tree.BINOP){
+//			Tree.BINOP b = (Tree.BINOP)e.exp;
+//			// Load Word
+//			if(b.right instanceof Tree.CONST){
+//				int rightVal = ((Tree.CONST)b.right).value;
+//				Temp t = new Temp();
+//				emit(OPER("sw `d0 "+rightVal+"(`s0)", L(t), L(munchExp(b.left))));
+//				return t; 
+//			}
+//			if(b.right instanceof Tree.BINOP){
+//				Temp t = munchExp(b);
+//				emit(OPER("sw `d0 (`s0)", L(frame.RV()), L(t)));
+//				return t; 
+//			}
+//		}
+//	  if(e.exp instanceof Tree.NAME){
+//		  Temp t = new Temp();
+//			  Tree.NAME n = (Tree.NAME)e.exp;
+//			  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(n))));
+//			  return t;  
+//	  }
+//    return frame.ZERO;
+//  }
 
   Temp munchExp(Tree.CALL s) {
 	if(s.func instanceof Tree.NAME){

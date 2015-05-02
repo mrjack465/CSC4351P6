@@ -2,155 +2,177 @@ PROCEDURE tigermain
 # Before canonicalization: 
 SEQ(
  MOVE(
-  TEMP t34,
-  ESEQ(
-   SEQ(
-    MOVE(
-     TEMP t33,
-     CALL(
-      NAME _allocRecord,
-       CONST 1)),
-    MOVE(
-     MEM(
-      BINOP(PLUS,
-       TEMP t33,
-       CONST 0)),
-     NAME L0)),
-   TEMP t33)),
+  TEMP t33,
+  CALL(
+   NAME _initArray,
+    CONST 3,
+    CONST 1234)),
  MOVE(
   ESEQ(
    SEQ(
     MOVE(
-     TEMP t35,
-     TEMP t34),
+     TEMP t34,
+     TEMP t33),
     SEQ(
-     CJUMP(EQ,
+     MOVE(
       TEMP t35,
-      CONST 0,
-      _BADPTR,L1),
-     LABEL L1)),
+      CONST 1),
+     SEQ(
+      CJUMP(LT,
+       TEMP t35,
+       CONST 0,
+       _BADSUB,L0),
+      SEQ(
+       LABEL L0,
+       SEQ(
+        CJUMP(GT,
+         TEMP t35,
+         MEM(
+          BINOP(PLUS,
+           TEMP t34,
+           CONST -4)),
+         _BADSUB,L1),
+        LABEL L1))))),
    MEM(
     BINOP(PLUS,
-     TEMP t35,
-     CONST 0))),
-  NAME L2))
+     TEMP t34,
+     BINOP(MUL,
+      TEMP t35,
+      CONST 4)))),
+  CONST 50))
 # After canonicalization: 
 MOVE(
  TEMP t33,
  CALL(
-  NAME _allocRecord,
-   CONST 1))
-MOVE(
- MEM(
-  BINOP(PLUS,
-   TEMP t33,
-   CONST 0)),
- NAME L0)
+  NAME _initArray,
+   CONST 3,
+   CONST 1234))
 MOVE(
  TEMP t34,
  TEMP t33)
 MOVE(
  TEMP t35,
- TEMP t34)
-CJUMP(EQ,
+ CONST 1)
+CJUMP(LT,
  TEMP t35,
  CONST 0,
- _BADPTR,L1)
+ _BADSUB,L0)
+LABEL L0
+CJUMP(GT,
+ TEMP t35,
+ MEM(
+  BINOP(PLUS,
+   TEMP t34,
+   CONST -4)),
+ _BADSUB,L1)
 LABEL L1
 MOVE(
  MEM(
   BINOP(PLUS,
-   TEMP t35,
-   CONST 0)),
- NAME L2)
+   TEMP t34,
+   BINOP(MUL,
+    TEMP t35,
+    CONST 4))),
+ CONST 50)
 # Basic Blocks: 
 #
-LABEL L4
+LABEL L3
 MOVE(
  TEMP t33,
  CALL(
-  NAME _allocRecord,
-   CONST 1))
-MOVE(
- MEM(
-  BINOP(PLUS,
-   TEMP t33,
-   CONST 0)),
- NAME L0)
+  NAME _initArray,
+   CONST 3,
+   CONST 1234))
 MOVE(
  TEMP t34,
  TEMP t33)
 MOVE(
  TEMP t35,
- TEMP t34)
-CJUMP(EQ,
+ CONST 1)
+CJUMP(LT,
  TEMP t35,
  CONST 0,
- _BADPTR,L1)
+ _BADSUB,L0)
+#
+LABEL L0
+CJUMP(GT,
+ TEMP t35,
+ MEM(
+  BINOP(PLUS,
+   TEMP t34,
+   CONST -4)),
+ _BADSUB,L1)
 #
 LABEL L1
 MOVE(
  MEM(
   BINOP(PLUS,
-   TEMP t35,
-   CONST 0)),
- NAME L2)
+   TEMP t34,
+   BINOP(MUL,
+    TEMP t35,
+    CONST 4))),
+ CONST 50)
 JUMP(
- NAME L3)
-LABEL L3
+ NAME L2)
+LABEL L2
 # Trace Scheduled: 
-LABEL L4
+LABEL L3
 MOVE(
  TEMP t33,
  CALL(
-  NAME _allocRecord,
-   CONST 1))
-MOVE(
- MEM(
-  BINOP(PLUS,
-   TEMP t33,
-   CONST 0)),
- NAME L0)
+  NAME _initArray,
+   CONST 3,
+   CONST 1234))
 MOVE(
  TEMP t34,
  TEMP t33)
 MOVE(
  TEMP t35,
- TEMP t34)
-CJUMP(EQ,
+ CONST 1)
+CJUMP(LT,
  TEMP t35,
  CONST 0,
- _BADPTR,L1)
+ _BADSUB,L0)
+LABEL L0
+CJUMP(GT,
+ TEMP t35,
+ MEM(
+  BINOP(PLUS,
+   TEMP t34,
+   CONST -4)),
+ _BADSUB,L1)
 LABEL L1
 MOVE(
  MEM(
   BINOP(PLUS,
-   TEMP t35,
-   CONST 0)),
- NAME L2)
+   TEMP t34,
+   BINOP(MUL,
+    TEMP t35,
+    CONST 4))),
+ CONST 50)
 JUMP(
- NAME L3)
-LABEL L3
+ NAME L2)
+LABEL L2
 # Instructions: 
-L4:
-  li t36 1
-	move $a0 t36
-	jal _allocRecord
-  move t33 $v0 
-	lw t37 0(t33)
-  move t37 $0 
-  move t34 t33 
-  move t35 t34 
-  beq t35 0 _BADPTR  
-L1:
-	lw t38 0(t35)
-  move t38 $0 
-  b  L3
 L3:
+  li t36 3
+	move $a0 t36
+  li t37 1234
+	move $a1 t37
+	jal _initArray
+  move t33 $v0 
+  move t34 t33 
+  li t38 1
+  move t35 t38 
+	blt t35 0 _BADSUB  
+L0:
+	lw t39 -4(t34)
+	bgt t35 t39 _BADSUB  
+L1:
+  li t40 50
+	sll t42 t35 2
+	add t41 t34 t42 
+	sw t40 (t41)
+  b  L2
+L2:
 END tigermain
-	.data
-	.word 1
-L2:	.asciiz	"n"
-	.data
-	.word 5
-L0:	.asciiz	"aname"
