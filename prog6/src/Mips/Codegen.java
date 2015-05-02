@@ -66,14 +66,20 @@ public class Codegen {
   }
 
   void munchStm(Tree.MOVE s) {
-	  System.out.println("MOVE"); 
+	  System.out.print("MOVE"); 
 	  if(s.src instanceof Tree.MEM){
-		  System.out.println("L----->MEM");
-		  if(s.dst instanceof Tree.TEMP)
-			  System.out.println("R----->TEMP");
-		  System.out.println();
+		  System.out.println("-----> MEM: LOAD WORD");
 		  munchExp(s.src);
 		  return;
+	  }
+	  if(s.dst instanceof Tree.MEM){
+		  System.out.println("------> MEM: STORE WORD");
+		  if(s.src instanceof Tree.CONST && ((Tree.MEM)s.dst).exp instanceof Tree.BINOP){
+			  Temp t = munchExp(s.src);
+			  Tree.BINOP b = ((Tree.BINOP)((Tree.MEM)s.dst).exp);
+			  emit(OPER("sw `d0 (`s0)", L(t), L(munchExp(b))));
+			  return;
+		  }
 	  }
 	  emit(new Assem.MOVE("  move `d0 `s0 ", munchExp(s.dst), munchExp(s.src)));
   }
@@ -296,10 +302,9 @@ public class Codegen {
 
 
   Temp munchExp(Tree.MEM e) {
-	  System.out.print("MEM: ");
 	if(e.exp instanceof Tree.BINOP){
-		System.out.println("BINOP "+BINOP[((Tree.BINOP)e.exp).binop]);
 		Tree.BINOP b = (Tree.BINOP)e.exp;
+		// Load Word
 		if(b.right instanceof Tree.CONST){
 			int rightVal = ((Tree.CONST)b.right).value;
 			Temp t = new Temp();
@@ -308,7 +313,6 @@ public class Codegen {
 		}
 		if(b.right instanceof Tree.BINOP){
 			Temp t = munchExp(b);
-			Tree.BINOP right = (Tree.BINOP)b.right;
 			emit(OPER("lw `d0 (`s0)", L(frame.RV()), L(t)));
 			return t; 
 		}
