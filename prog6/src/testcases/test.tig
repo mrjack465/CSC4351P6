@@ -1,8 +1,8 @@
 
 let 
 	type rectype = {name:string, major:string}
-	var rec1 := rectype {name="aname",major="AMajor"}
+	type arrType = array of int
+	var rec1 := rectype {name="aname"}
 in
-	rec1.name := "n";
-	rec1.major := "AbMajor"
+	rec1.name := "n"
 end
